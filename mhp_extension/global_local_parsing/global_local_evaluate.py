@@ -41,7 +41,8 @@ def get_arguments():
     parser.add_argument("--arch", type=str, default='resnet101')
     # Data Preference
     parser.add_argument("--data-dir", type=str, default='./data/LIP')
-    parser.add_argument("--batch-size", type=int, default=1)
+    parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--num-workers", type=int, default=16)
     parser.add_argument("--split-name", type=str, default='crop_pic')
     parser.add_argument("--input-size", type=str, default='473,473')
     parser.add_argument("--num-classes", type=int, default=20)
@@ -158,7 +159,7 @@ def main():
                                       flip=args.flip)
     num_samples = len(lip_test_dataset)
     print('Totoal testing sample numbers: {}'.format(num_samples))
-    testloader = data.DataLoader(lip_test_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=True)
+    testloader = data.DataLoader(lip_test_dataset, batch_size=args.batch_size, num_workers=args.num_workers, shuffle=False, pin_memory=True)
 
     # Load model weight
     state_dict = torch.load(args.model_restore)
