@@ -97,18 +97,18 @@ def multi_scale_testing(model, batch_input_im, crop_size=[473, 473], flip=True, 
         scaled_im = interp_im(batch_input_im)
         parsing_output = model(scaled_im)
         parsing_output = parsing_output[0][-1]
-        output = parsing_output[0]
+        output = parsing_output
         if flip:
             flipped_output = parsing_output[1]
             flipped_output[14:20, :, :] = flipped_output[flipped_idx, :, :]
             output += flipped_output.flip(dims=[-1])
             output *= 0.5
-        output = interp(output.unsqueeze(0))
-        ms_outputs.append(output[0])
+        output = interp(output)
+        ms_outputs.append(output)
     ms_fused_parsing_output = torch.stack(ms_outputs)
-    ms_fused_parsing_output = ms_fused_parsing_output.mean(0)
-    ms_fused_parsing_output = ms_fused_parsing_output.permute(1, 2, 0)  # HWC
-    parsing = torch.argmax(ms_fused_parsing_output, dim=2)
+    ms_fused_parsing_output = ms_fused_parsing_output.mean(0)  # supporting batch dimension
+    ms_fused_parsing_output = ms_fused_parsing_output.permute(0, 2, 3, 1)  # HWC
+    parsing = torch.argmax(ms_fused_parsing_output, dim=3)
     parsing = parsing.data.cpu().numpy()
     ms_fused_parsing_output = ms_fused_parsing_output.data.cpu().numpy()
     return parsing, ms_fused_parsing_output
@@ -177,34 +177,30 @@ def main():
         os.makedirs(sp_results_dir)
 
     palette = get_palette(20)
-    parsing_preds = []
-    scales = np.zeros((num_samples, 2), dtype=np.float32)
-    centers = np.zeros((num_samples, 2), dtype=np.int32)
     with torch.no_grad():
         for idx, batch in enumerate(tqdm(testloader)):
             image, meta = batch
             if (len(image.shape) > 4):
                 image = image.squeeze()
-            im_name = meta['name'][0]
-            c = meta['center'].numpy()[0]
-            s = meta['scale'].numpy()[0]
-            w = meta['width'].numpy()[0]
-            h = meta['height'].numpy()[0]
-            scales[idx, :] = s
-            centers[idx, :] = c
             parsing, logits = multi_scale_testing(model, image.cuda(), crop_size=input_size, flip=args.flip,
                                                   multi_scales=multi_scales)
             if args.save_results:
-                parsing_result = transform_parsing(parsing, c, s, w, h, input_size)
-                parsing_result_path = os.path.join(sp_results_dir, im_name + '.png')
-                output_im = PILImage.fromarray(np.asarray(parsing_result, dtype=np.uint8))
-                output_im.putpalette(palette)
-                output_im.save(parsing_result_path)
-                # # save logits
-                # logits_result = transform_logits(logits, c, s, w, h, input_size)
-                # logits_result_path = os.path.join(sp_results_dir, im_name + '.npy')
-                # np.save(logits_result_path, logits_result)
-    return
+                for b in range(len(parsing)):
+                    im_name = meta['name'][b]
+                    c = meta['center'].numpy()[b]
+                    s = meta['scale'].numpy()[b]
+                    w = meta['width'].numpy()[b]
+                    h = meta['height'].numpy()[b]
+                    parsing_result = transform_parsing(parsing[b], c, s, w, h, input_size)
+                    parsing_result_path = os.path.join(sp_results_dir, im_name + '.png')
+                    output_im = PILImage.fromarray(np.asarray(parsing_result, dtype=np.uint8))
+                    output_im.putpalette(palette)
+                    output_im.save(parsing_result_path)
+                    # # save logits
+                    # logits_result = transform_logits(logits, c, s, w, h, input_size)
+                    # logits_result_path = os.path.join(sp_results_dir, im_name + '.npy')
+                    # np.save(logits_result_path, logits_result)
+        return
 
 
 if __name__ == '__main__':
