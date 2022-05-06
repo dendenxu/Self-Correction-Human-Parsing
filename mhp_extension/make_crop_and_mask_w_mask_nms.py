@@ -74,8 +74,9 @@ def make_crop_and_mask(img_info, pred, file_list, crop_save_dir, mask_save_dir, 
         cv2.imwrite(os.path.join(crop_save_dir, bbox_name), crop_img)
 
     assert person_idx > 0, 'image without instance'
-    mask_name = os.path.splitext(img_name)[0] + '_mask.npy'
-    np.save(os.path.join(mask_save_dir, mask_name), panoptic_seg)
+    mask_name = os.path.splitext(img_name)[0] + '_mask.png'
+    cv2.imwrite(os.path.join(mask_save_dir, mask_name), panoptic_seg.astype(np.uint8)*255)
+    # np.save(os.path.join(mask_save_dir, mask_name), panoptic_seg)
 
     ############## json writing ##################
     item = {}

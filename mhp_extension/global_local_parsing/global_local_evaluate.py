@@ -199,10 +199,10 @@ def main():
                 output_im = PILImage.fromarray(np.asarray(parsing_result, dtype=np.uint8))
                 output_im.putpalette(palette)
                 output_im.save(parsing_result_path)
-                # save logits
-                logits_result = transform_logits(logits, c, s, w, h, input_size)
-                logits_result_path = os.path.join(sp_results_dir, im_name + '.npy')
-                np.save(logits_result_path, logits_result)
+                # # save logits
+                # logits_result = transform_logits(logits, c, s, w, h, input_size)
+                # logits_result_path = os.path.join(sp_results_dir, im_name + '.npy')
+                # np.save(logits_result_path, logits_result)
     return
 
 
