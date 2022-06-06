@@ -33,7 +33,7 @@ def make_crop_and_mask(img_info, pred, file_list, crop_save_dir, mask_save_dir, 
     person_idx = 0
 
     panoptic_seg = np.zeros((img_h, img_w), dtype=np.uint8)
-    assert len(pred[img_id]['instances']) > 0, 'image without instance prediction {}, {}'.format(img_id, img_id in pred.keys())
+    # assert len(pred[img_id]['instances']) > 0, 'image without instance prediction {}, {}'.format(img_id, img_id in pred.keys())
 
     for instance in pred[img_id]['instances']:
         score = instance['score']
@@ -73,7 +73,7 @@ def make_crop_and_mask(img_info, pred, file_list, crop_save_dir, mask_save_dir, 
 
         cv2.imwrite(os.path.join(crop_save_dir, bbox_name), crop_img)
 
-    assert person_idx > 0, 'image without instance'
+    # assert person_idx > 0, 'image without instance'
     mask_name = os.path.splitext(img_name)[0] + '_mask.png'
     cv2.imwrite(os.path.join(mask_save_dir, mask_name), panoptic_seg.astype(np.uint8)*255)
     # np.save(os.path.join(mask_save_dir, mask_name), panoptic_seg)

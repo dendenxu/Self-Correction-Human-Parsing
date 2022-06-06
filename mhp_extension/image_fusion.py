@@ -14,7 +14,7 @@ def patch2img_output(patch_dir, img_name, img_height, img_width, bbox, bbox_type
     for i in range(len(bbox)):  # person index starts from 1
         file_path = os.path.join(patch_dir, os.path.splitext(img_name)[0] + '_' + str(i + 1) + '_' + bbox_type + '.png')
         instance_output = cv2.imread(file_path)
-        output[bbox[i][1]:bbox[i][3] + 1, bbox[i][0]:bbox[i][2] + 1] += instance_output[:, :, :num_dim]
+        output[bbox[i][1]:bbox[i][3] + 1, bbox[i][0]:bbox[i][2] + 1] = instance_output[:, :, :num_dim] # note: this might just replace previous prediction
 
     return output
 
