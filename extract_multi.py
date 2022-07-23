@@ -124,7 +124,7 @@ if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('path', type=str)
-    parser.add_argument('--ckpt_dir', type=str, default='/nas/share')
+    parser.add_argument('--ckpt_dir', type=str, default='/nas/share/schp')
     parser.add_argument('--tmp', type=str, default='data')
     parser.add_argument('--debug', action='store_true')
     parser.add_argument('--only', type=str, nargs='*', default=[])
