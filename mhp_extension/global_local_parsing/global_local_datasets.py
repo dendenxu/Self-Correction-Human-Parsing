@@ -141,7 +141,7 @@ class CropDataValSet(data.Dataset):
 
         # list_path = os.path.join(self.root, self.split_name + '.txt')
         # val_list = [i_id.strip() for i_id in open(list_path)]
-        val_list = [i_id.strip().split('.')[0] for i_id in sorted(os.listdir(os.path.join(self.root, self.split_name)))]
+        val_list = [os.path.splitext(i_id)[0] for i_id in sorted(os.listdir(os.path.join(self.root, self.split_name)))]
 
         self.val_list = val_list
         self.number_samples = len(self.val_list)
