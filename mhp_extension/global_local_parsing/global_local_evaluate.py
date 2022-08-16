@@ -41,7 +41,7 @@ def get_arguments():
     parser.add_argument("--arch", type=str, default='resnet101')
     # Data Preference
     parser.add_argument("--data-dir", type=str, default='./data/LIP')
-    parser.add_argument("--batch-size", type=int, default=16)
+    parser.add_argument("--batch-size", type=int, default=64)
     parser.add_argument("--num-workers", type=int, default=16)
     parser.add_argument("--split-name", type=str, default='crop_pic')
     parser.add_argument("--input-size", type=str, default='473,473')

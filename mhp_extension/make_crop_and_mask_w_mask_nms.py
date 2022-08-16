@@ -1,10 +1,13 @@
-import numpy as np
-import cv2, torch
 import os
+import cv2
 import json
+import torch
 import argparse
+import numpy as np
 import pycocotools.mask as mask_util
+
 from tqdm import tqdm
+from multiprocessing.pool import ThreadPool
 
 
 def bbox_expand(img_height, img_width, bbox, exp_ratio):
@@ -18,7 +21,7 @@ def bbox_expand(img_height, img_width, bbox, exp_ratio):
     return int(new_x_min), int(new_y_min), int(new_x_max), int(new_y_max)
 
 
-def make_crop_and_mask(img_info, pred, file_list, crop_save_dir, mask_save_dir, args):
+def make_crop_and_mask(img_info, pred, crop_save_dir, mask_save_dir, args):
     img_name = img_info['file_name']
     img_id = img_info['id'] - 1  # img_info['id'] start form 1
     img_w = img_info['width']
@@ -91,9 +94,10 @@ def make_crop_and_mask(img_info, pred, file_list, crop_save_dir, mask_save_dir, 
     item['person_bbox_score'] = bbox_score_list
     item['bbox_name'] = bbox_name_list
     item['mask_name'] = mask_name
-    file_list.append(item)
-    json_file = {'root': file_list}
-    return json_file, file_list
+    return item
+    # file_list.append(item)
+    # json_file = {'root': file_list}
+    # return json_file, file_list
 
 
 def get_arguments():
@@ -112,10 +116,36 @@ def get_arguments():
     return parser.parse_args()
 
 
+def parallel_execution(*args, num_processes=64, action=lambda *args, **kwargs: None, print_progress=True, **kwargs):
+    # NOTE: we expect first arg / or kwargs to be distributed
+    # NOTE: print_progress arg is reserved
+
+    results = []
+    async_results = []
+    pool = ThreadPool(processes=num_processes)
+
+    valid_arg = args[0] if isinstance(args[0], list) else next(iter(kwargs.values()))  # TODO: search through them all
+
+    # Spawn threads
+    for i in range(len(valid_arg)):  # might be lambda x: np.split(x.permute(0, 2, 3, 1).detach().cpu().numpy(), len(x))
+        action_args = [(arg[i] if isinstance(arg, list) and len(arg) == len(valid_arg) else arg) for arg in args]
+        action_kwargs = {key: (kwargs[key][i] if isinstance(kwargs[key], list) and len(kwargs[key]) == len(valid_arg) else kwargs[key]) for key in kwargs}
+        async_result = pool.apply_async(action, action_args, action_kwargs)
+        async_results.append(async_result)
+
+    # Join threads and get return values
+    def maybe_tqdm(x): return tqdm(x) if print_progress else x
+    for async_result in maybe_tqdm(async_results):
+        results.append(async_result.get())  # will sync the corresponding thread
+    pool.close()
+    pool.join()
+    return results  # might be lambda x: torch.tensor(np.stack(x), device='cuda').permute(0, 3, 1, 2)
+
+
 def main(args):
     img_info_list = json.load(open(args.img_list, encoding='UTF-8'))
     pred = torch.load(args.det_res)
-    pred = {d['image_id']-1:d for d in pred}
+    pred = {d['image_id']-1: d for d in pred}
     crop_save_dir = os.path.join(args.save_dir, 'crop_pic')
     if not os.path.exists(crop_save_dir):
         os.makedirs(crop_save_dir)
@@ -123,12 +153,12 @@ def main(args):
     if not os.path.exists(mask_save_dir):
         os.makedirs(mask_save_dir)
 
-    file_list = []
-    for img_info in tqdm(img_info_list['images']):
-        json_file, file_list = make_crop_and_mask(img_info, pred, file_list, crop_save_dir, mask_save_dir, args)
+    file_list = parallel_execution(img_info_list['images'], pred, crop_save_dir, mask_save_dir, args, action=make_crop_and_mask)
+    json_file = {'root': file_list}
     # modify: only dump once
     with open(os.path.join(args.save_dir, 'crop.json'), 'w') as f:
         json.dump(json_file, f, indent=2)
+
 
 if __name__ == '__main__':
     args = get_arguments()
