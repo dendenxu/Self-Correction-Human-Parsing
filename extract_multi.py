@@ -82,7 +82,7 @@ def schp_pipeline(img_dir, ckpt_dir):
     # 通过设置环境变量来控制
     os.environ['annotations'] = annotations
     os.environ['img_dir'] = img_dir
-    cmd = f"python3 ./finetune_net.py --num-gpus 1 --config-file ../configs/Misc/demo.yaml --eval-only MODEL.WEIGHTS {join(ckpt_dir, 'detectron2_maskrcnn_cihp_finetune.pth')} TEST.AUG.ENABLED False DATALOADER.NUM_WORKERS 0 OUTPUT_DIR {join(tmp_dir, 'detectron2_prediction')}"
+    cmd = f"python3 ./finetune_net.py --num-gpus 1 --config-file ../configs/Misc/demo.yaml --eval-only MODEL.WEIGHTS {join(ckpt_dir, 'detectron2_maskrcnn_cihp_finetune.pth')} TEST.AUG.ENABLED False DATALOADER.NUM_WORKERS 16 OUTPUT_DIR {join(tmp_dir, 'detectron2_prediction')} SOLVER.IMS_PER_BATCH 32"
     check_and_run(join(tmp_dir, 'detectron2_prediction'), cmd)
 
     move_mhp()
