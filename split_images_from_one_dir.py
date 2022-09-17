@@ -22,6 +22,8 @@ for human in os.listdir(args.path):
     msk_dir = join(human_dir, args.mask_dir) # eval results (to be split)
     for cam in os.listdir(img_dir):
         cam_dir = join(img_dir, cam) # reference: original image dir
+        if cam_dir == args.output.replace(args.mask_dir, 'images'):
+            continue
         for img in os.listdir(cam_dir):
             msk = img.replace('.jpg', '.png')
             new_msk = f"{human}.{cam}.{msk}" # like F1_06_000000.02.000000.jpg

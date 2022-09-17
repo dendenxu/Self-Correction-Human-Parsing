@@ -21,6 +21,8 @@ for human in os.listdir(args.path):
     img_dir = join(human_dir, 'images')
     for cam in os.listdir(img_dir):
         cam_dir = join(img_dir, cam)
+        if cam_dir == args.output:
+            continue
         for img in os.listdir(cam_dir):
             img_path = join(cam_dir, img)
             new_img = f"{human}.{cam}.{img}" # like F1_06_000000.02.000000.jpg
