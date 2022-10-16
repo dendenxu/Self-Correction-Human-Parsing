@@ -1,7 +1,16 @@
 import os
+import sys
 import argparse
 from os.path import join
-from .merge_images_to_one_dir import run
+from termcolor import cprint, colored
+
+
+def run(cmd):
+    func = sys._getframe(1).f_code.co_name
+    print(colored(func, 'yellow')+": "+colored(cmd, 'blue'))
+    code = os.system(cmd)
+    if code != 0:
+        raise RuntimeError(colored(str(code), 'red')+" <- "+colored(func, 'yellow')+": "+colored(cmd, 'red'))
 
 
 def main():
