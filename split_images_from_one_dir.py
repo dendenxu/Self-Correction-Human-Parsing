@@ -40,7 +40,7 @@ def main():
                 msk_cam_dir = join(msk_dir, cam)
                 msk_path = join(msk_cam_dir, msk)  # copy result like (...)F1_06_000000/images/02/000000.png
                 new_msk_path = join(args.output, new_msk)  # copy from (to be split)
-                run(f'mkdir -p {msk_cam_dir}')
+                os.makedirs(msk_cam_dir, exist_ok=True)
                 run(f'mv {new_msk_path} {msk_path}')
 
 
